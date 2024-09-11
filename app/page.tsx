@@ -2,9 +2,28 @@
 "use client";
 import { useState } from "react";
 import Shaderpark from "./components/Shaderpark";
-import CodeMirrorEditor from "./components/CodeMirrorEditor";
+import AudioAnalyser from "./components/AudioAnalyser";
 import Editor from "./components/Editor";
 export default function Home() {
+  const [audioSettings, setAudioSettings] = useState({
+    low: 50,
+    mid: 50,
+    high: 50,
+  });
+
+  // Create a string representation of the audio settings
+  const audioSettingsStringified = `
+let low = ${audioSettings.low.toFixed(2)};
+let mid = ${audioSettings.mid.toFixed(2)};
+let high = ${audioSettings.high.toFixed(2)};
+
+  `;
+  const handleAudioChange = (settings) => {
+    setAudioSettings(settings);
+
+    //console.log("Updated audio settings:", settings);
+  };
+
   let code = `rotateY(-0.1 * time);
 let n = noise(getSpace() * 2 + time );
 color(vec3(0, 0, .5) + normal * .5);
@@ -61,9 +80,10 @@ box(sz, sz, sz*0.2)`; */
         <Editor startCode={startCode} onCodeChange={handleCodeChange}></Editor>
       </div>
       <h1>Shader Park with Next.js</h1>
-
+      <h1>Shader Audio Visualizer</h1>
+      <AudioAnalyser onChange={handleAudioChange} />
       {/* <Shader /> */}
-      <Shaderpark startCode={startCode} />
+      <Shaderpark startCode={audioSettingsStringified + startCode} />
     </div>
   );
 }
