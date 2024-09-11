@@ -4,6 +4,7 @@ import { useState } from "react";
 import Shaderpark from "./components/Shaderpark";
 import AudioAnalyser from "./components/AudioAnalyser";
 import Editor from "./components/Editor";
+import AudioPlayer from "./components/AudioPlayer";
 export default function Home() {
   const [audioSettings, setAudioSettings] = useState({
     low: 50,
@@ -24,12 +25,39 @@ let high = ${audioSettings.high.toFixed(2)};
     //console.log("Updated audio settings:", settings);
   };
 
-  let code = `rotateY(-0.1 * time);
-let n = noise(getSpace() * 2 + time );
-color(vec3(0, 0, .5) + normal * .5);
-metal(n);
-shine(n);
-sphere(0.5 + n * sin(time/10));`;
+  let code = `setMaxReflections(2)
+
+setMaxIterations(1)
+rotateX(PI/4)
+let speedScale = input(16,1,100)
+function gyroid(scale) {
+  let s = getSpace();
+  s = floor(s*3+time*(speedScale/100))* scale;
+  return dot(sin(s), cos(vec3(s.z, s.x, s.y) +PI))/ scale ;
+}
+//setMaxIterations(100)
+setStepSize(.1);
+let noiseScale = input(20, 0, 200);
+//let n = noise(getSpace()*3);
+//backgroundColor(n, n, n);
+
+shine(.4)
+metal(.6);
+
+
+
+let gyScale = input(16, 0, 200);
+let gy = gyroid(gyScale);
+let n = vectorContourNoise(getSpace()*5 + vec3(0, 0, time*.1), gy, 1.2);
+n = pow(sin(n*2)*.5 +.5, vec3(4))
+color(n)
+reflectiveColor(n*4)
+sphere(.6+n.x*.00);
+difference();
+setSDF(gy);
+
+
+`;
 
   /*  let code = `const radialRepeat = (repeats) => {
   const s = getSpace()
@@ -63,6 +91,15 @@ let colorNoise = noise(getRayDirection()*500)*.5+.5;
 let col1 = vec3((100/255), (100/255), (100/255));
 color(col1 * colorNoise)
 box(sz, sz, sz*0.2)`; */
+
+  const handleFrequencyUpdate = (frequencies) => {
+    setAudioSettings({
+      low: frequencies.low * 100, // Scale to 0-100 if needed
+      mid: frequencies.mid * 100,
+      high: frequencies.high * 100,
+    });
+    console.log(frequencies);
+  };
   const [startCode, setStartCode] = useState(code);
 
   const handleCodeChange = (newCode) => {
@@ -79,9 +116,17 @@ box(sz, sz, sz*0.2)`; */
 
         <Editor startCode={startCode} onCodeChange={handleCodeChange}></Editor>
       </div>
+
+      <AudioPlayer onFrequencyUpdate={handleFrequencyUpdate} />
       <h1>Shader Park with Next.js</h1>
       <h1>Shader Audio Visualizer</h1>
       <AudioAnalyser onChange={handleAudioChange} />
+      <div>
+        <h2>Frequency Values</h2>
+        <p>Low: {audioSettings.low.toFixed(2)}</p>
+        <p>Mid: {audioSettings.mid.toFixed(2)}</p>
+        <p>High: {audioSettings.high.toFixed(2)}</p>
+      </div>
       {/* <Shader /> */}
       <Shaderpark startCode={audioSettingsStringified + startCode} />
     </div>

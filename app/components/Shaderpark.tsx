@@ -18,7 +18,7 @@ const Shaderpark = ({ startCode }) => {
   const meshRef = useRef(null); // Use ref to store the mesh
   const rendererRef = useRef(null); // Use ref to store the renderer
   const timeRef = useRef(0); // Use ref to store the time variable
-
+  const canvasRef = useRef(null);
   const initializeScene = () => {
     // Sizes
     const sizes = {
@@ -39,7 +39,7 @@ const Shaderpark = ({ startCode }) => {
     renderer.setSize(sizes.width, sizes.height);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setClearColor(new Color(1, 1, 1), 0);
-    document.body.appendChild(renderer.domElement);
+    canvasRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer; // Store the renderer in the ref
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -67,7 +67,7 @@ const Shaderpark = ({ startCode }) => {
     if (meshRef.current) {
       try {
         meshRef.current.material = sculptToThreeJSMaterial(code);
-        console.log("Updated shader with new code.");
+        //console.log("Updated shader with new code.");
       } catch (error) {
         console.error(error);
       }
@@ -103,7 +103,12 @@ const Shaderpark = ({ startCode }) => {
     return () => {
       if (rendererRef.current) {
         rendererRef.current.dispose();
-        document.body.removeChild(rendererRef.current.domElement);
+        if (
+          canvasRef.current &&
+          canvasRef.current.contains(rendererRef.current.domElement)
+        ) {
+          canvasRef.current.removeChild(rendererRef.current.domElement);
+        }
       }
       window.removeEventListener("resize", () => onResize(camera, renderer));
     };
@@ -115,8 +120,7 @@ const Shaderpark = ({ startCode }) => {
 
   return (
     <div>
-      <h1>Three.js Scene</h1>
-      <div className="code-container"></div>
+      <div ref={canvasRef} className="code-container"></div>
     </div>
   );
 };
